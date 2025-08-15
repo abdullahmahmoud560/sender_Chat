@@ -1,0 +1,73 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SignalR Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+
+    #messages {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 200px;
+      overflow-y: scroll;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔌 SignalR Chat</h2>
+  <div id="messages"></div>
+
+  <input type="text" id="receiverId" placeholder="Receiver ID" />
+  <input type="text" id="messageInput" placeholder="Enter your message" />
+  <button onclick="sendMessage()">Send</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.5/dist/browser/signalr.min.js"></script>
+  <script>
+    // التوكن (اكتبه يدويًا هنا أو اجلبه من localStorage إن أردت)
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6IjE4Zjg0NTFiLWQ2NjYtNDViMi1iNzRmLWU5MGI2YzU5YTAyNyIsIkVtYWlsIjoieWFiYmdoYWdoQGdtYWlsLmNvbSIsImZ1bGxOYW1lIjoiYWJkdWxsYWgiLCJwaG9uZU51bWJlciI6IisxNTUxNDQzNyIsImp0aSI6IjY3OGJhZTYxLTM4YmMtNDk5Zi05M2M0LTg4YTQxZjY3NmFkNSIsIlJvbGUiOiJBZG1pbiIsImV4cCI6MTc1NTkwMDM0OSwiaXNzIjoiaHR0cHM6Ly9maXJzdHByb2plY3QudGFraGxlZXNhay5jb20iLCJhdWQiOiJodHRwczovL2ZpcnN0cHJvamVjdC50YWtobGVlc2FrLmNvbSJ9.VCbuwpg_mXvdhpxH5sH9E3p0iCB6mUzjsSZfrsL3pDI";
+
+    // الاتصال بـ SignalR
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`https://localhost:7127/chatHub?access_token=${token}`)
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
+
+    connection.on("ReceiveMessage", (message) => {
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML += `<div>📩 ${message}</div>`;
+    });
+
+    connection.start()
+      .then(() => {
+        console.log("✅ Connected to SignalR hub");
+      })
+      .catch(err => {
+        console.error("❌ Error connecting:", err);
+      });
+
+    function sendMessage() {
+      const receiverId = document.getElementById("receiverId").value;
+      const message = document.getElementById("messageInput").value;
+
+      connection.invoke("SendMessageToUser", receiverId, message)
+        .then(() => {
+          console.log("✅ Message sent");
+          document.getElementById("messageInput").value = "";
+        })
+        .catch(err => console.error("❌ Error sending message:", err));
+    }
+  </script>
+
+</body>
+</html>
