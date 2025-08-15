@@ -39,7 +39,7 @@
 
     // الاتصال بـ SignalR
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://localhost:7127/chatHub?access_token=${token}`)
+      .withUrl(`https://customerservices.takhleesak.com/chatHub?access_token=${token}`)
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
