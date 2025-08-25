@@ -2,28 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SignalR Chat</title>
+  <title>SignalR Chat Test</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 40px;
+      background: #f5f5f5;
     }
+    h2 { color: #333; }
     #messages {
       border: 1px solid #ccc;
       padding: 10px;
-      height: 200px;
+      height: 300px;
       overflow-y: scroll;
+      background: #fff;
       margin-bottom: 20px;
     }
     input, button {
       padding: 10px;
       margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
+    button {
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
   </style>
 </head>
 <body>
 
-<h2>🔌 SignalR Chat</h2>
+<h2>🔌 SignalR Chat Test</h2>
 <div id="messages"></div>
 
 <input type="text" id="receiverId" placeholder="Receiver ID" />
@@ -32,14 +43,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.5/dist/browser/signalr.min.js"></script>
 <script>
-  // التوكن ثابت أو من localStorage
   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6IjE4Zjg0NTFiLWQ2NjYtNDViMi1iNzRmLWU5MGI2YzU5YTAyNyIsIkVtYWlsIjoieWFiYmdoYWdoQGdtYWlsLmNvbSIsImZ1bGxOYW1lIjoiYWJkdWxsYWgiLCJwaG9uZU51bWJlciI6IisxNTUxNDQzNyIsImp0aSI6IjI5YWVjN2I1LWEyMGYtNDQxMC05MmU0LTZjYzQ3YTk2OThlYiIsIlJvbGUiOiJBZG1pbiIsImV4cCI6MTc1Njc0MDkwNiwiaXNzIjoiaHR0cHM6Ly9maXJzdHByb2plY3QudGFraGxlZXNhay5jb20iLCJhdWQiOiJodHRwczovL2ZpcnN0cHJvamVjdC50YWtobGVlc2FrLmNvbSJ9.24FKC4po10DQBsr2eOijkf3bTFMWT63xNy5dyWrN3z0";
 
-  // إنشاء الاتصال بالـ Hub مع Header
+  // إعداد الاتصال بالـ Hub
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl(`https://localhost:7127/chatHub`, {
+    .withUrl("https://customerservice.runasp.net/chatHub", {
       transport: signalR.HttpTransportType.WebSockets,
-      accessTokenFactory: () => token // 🔑 هنا بنرسل التوكن في Header
+      accessTokenFactory: () => token // 🔑 توكن في Header
     })
     .configureLogging(signalR.LogLevel.Information)
     .withAutomaticReconnect()
@@ -52,14 +62,21 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 
-  // استقبال Errors / Info من السيرفر
+  // استقبال رسائل Errors / Info
   connection.on("Error", (msg) => alert(`❌ Error: ${msg}`));
   connection.on("Info", (msg) => console.log(`ℹ️ Info: ${msg}`));
 
-  // بدء الاتصال
-  connection.start()
-    .then(() => console.log("✅ Connected to SignalR hub"))
-    .catch(err => console.error("❌ Error connecting:", err));
+  // بدء الاتصال مع إعادة محاولة عند الفشل
+  async function startConnection() {
+    try {
+      await connection.start();
+      console.log("✅ Connected to SignalR hub");
+    } catch (err) {
+      console.error("❌ Error connecting:", err);
+      setTimeout(startConnection, 5000); // إعادة المحاولة كل 5 ثواني
+    }
+  }
+  startConnection();
 
   // إرسال رسالة
   function sendMessage() {
